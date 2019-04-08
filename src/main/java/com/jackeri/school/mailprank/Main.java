@@ -1,12 +1,14 @@
 package com.jackeri.school.mailprank;
 
+import com.jackeri.school.mailprank.smtp.SmtpClient;
+
 import java.io.*;
 import java.util.LinkedList;
 
 public class Main {
 
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
+       /* System.out.println("Hello, World!");
 
         LinkedList<Victim> victims = new LinkedList<Victim>();
 
@@ -29,6 +31,7 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
             return;
-        }
+        }*/
+       new SmtpClient();
     }
 }
