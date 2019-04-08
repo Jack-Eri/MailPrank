@@ -1,8 +1,10 @@
 package com.jackeri.school.mailprank.smtp;
 
+import com.jackeri.school.mailprank.Mail;
+
 import java.io.IOException;
 
 public interface ISmtpClient {
 
-   // public void sendMessage(Message message) throws IOException;
+    boolean sendMessage(Mail mail) throws IOException;
 }
