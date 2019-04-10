@@ -1,5 +1,9 @@
 package com.jackeri.school.mailprank;
 
+import com.jackeri.school.mailprank.smtp.SmtpClient;
+
+import java.io.IOException;
+
 public class VictimGroup {
 
     private Victim sender;
@@ -11,12 +15,15 @@ public class VictimGroup {
         this.receivers = victims;
     }
 
-    public void sendMails() {
+    public void sendMails(SmtpClient smtpClient) {
 
-        System.out.println("Sender: " + sender);
-        System.out.println("Recivers:");
         for (Victim victim : receivers) {
-            System.out.println(victim);
+            try {
+                smtpClient.sendMessage(new Mail(sender.getMail(), victim.getMail(), "Test", "Test Test"));
+            } catch (IOException e) {
+                System.out.printf("Couldn't send mail from %s to %s!\n", sender, victim);
+                e.printStackTrace();
+            }
         }
     }
 

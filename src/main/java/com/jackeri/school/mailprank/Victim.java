@@ -8,6 +8,10 @@ public class Victim {
         this.mail = mail;
     }
 
+    public String getMail() {
+        return mail;
+    }
+
     @Override
     public String toString() {
         return mail;

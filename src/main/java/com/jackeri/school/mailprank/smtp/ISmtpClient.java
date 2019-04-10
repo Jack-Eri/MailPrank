@@ -7,4 +7,6 @@ import java.io.IOException;
 public interface ISmtpClient {
 
     boolean sendMessage(Mail mail) throws IOException;
+
+    void sendMessages(Mail[] mails) throws  IOException;
 }
