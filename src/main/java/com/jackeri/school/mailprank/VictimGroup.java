@@ -1,21 +1,22 @@
 package com.jackeri.school.mailprank;
 
-import com.jackeri.school.mailprank.smtp.SmtpClient;
+import com.jackeri.school.mailprank.smtp.ISmtpClient;
 
 import java.io.IOException;
+import java.util.LinkedList;
 
 public class VictimGroup {
 
     private Victim sender;
-    private Victim[] receivers;
+    private LinkedList<Victim> receivers;
 
-    public VictimGroup(Victim sender, Victim[] victims) {
+    public VictimGroup(Victim sender) {
 
         this.sender = sender;
-        this.receivers = victims;
+        this.receivers = new LinkedList<Victim>();
     }
 
-    public void sendMails(SmtpClient smtpClient) {
+    public void sendMails(ISmtpClient smtpClient) {
 
         for (Victim victim : receivers) {
             try {
@@ -27,11 +28,13 @@ public class VictimGroup {
         }
     }
 
-    public Victim getSender() {
-        return sender;
+    public void addReceiver(Victim victim) {
+        if (victim != null)
+            receivers.add(victim);{
+        }
     }
 
-    public Victim[] getReceivers() {
-        return receivers;
+    public boolean isGroupReady() {
+        return receivers.size() >= 3;
     }
 }
