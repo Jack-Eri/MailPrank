@@ -16,9 +16,7 @@ public class PrankParser {
         this.pranks = new LinkedList<Prank>();
 
         try {
-            reader = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(filename), "UTF-8")
-            );
+            reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
         } catch (IOException e) {
             System.out.println("Failed opening " + filename + "!");
             System.exit(-1);

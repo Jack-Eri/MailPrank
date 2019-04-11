@@ -119,6 +119,28 @@ public class SmtpClient implements ISmtpClient {
             return false;
         }
 
+        if(HOST.equals("smtp.mailtrap.io")){
+            writer.printf("AUTH LOGIN\r\n");
+
+
+            if (!checkResponseCode(getResponses().getLast(), "334")) {
+                return false;
+            }
+
+            writer.printf("YmJhN2YzYTc5NDZmNGY=\r\n");
+
+            if (!checkResponseCode(getResponses().getLast(), "334")) {
+                return false;
+            }
+
+            writer.printf("ZjA2Yjg0ZDIwYmRmOGY=\r\n");
+
+            if (!checkResponseCode(getResponses().getLast(), "235")) {
+                return false;
+            }
+
+        }
+
         boolean mailSent = sendMail(mail);
 
         // quit
@@ -146,6 +168,27 @@ public class SmtpClient implements ISmtpClient {
             return;
         }
 
+        if(HOST.equals("smtp.mailtrap.io")){
+            writer.printf("AUTH LOGIN\r\n");
+
+            if (!checkResponseCode(getResponses().getLast(), "334")) {
+                return;
+            }
+
+            writer.printf("YmJhN2YzYTc5NDZmNGY=\r\n");
+
+            if (!checkResponseCode(getResponses().getLast(), "334")) {
+                return;
+            }
+
+            writer.printf("ZjA2Yjg0ZDIwYmRmOGY=\r\n");
+
+            if (!checkResponseCode(getResponses().getLast(), "235")) {
+                return;
+            }
+
+        }
+
         for (Mail mail : mails) {
             sendMail(mail);
         }
@@ -163,14 +206,14 @@ public class SmtpClient implements ISmtpClient {
     private boolean sendMail(Mail mail) throws IOException {
 
         // Set sender
-        writer.printf("MAIL FROM: %s\r\n", mail.getSender());
+        writer.printf("MAIL FROM: <%s>\r\n", mail.getSender());
 
         if (!checkResponseCode(getResponses().getLast(), "250")) {
             return false;
         }
 
         // Set receiver
-        writer.printf("RCPT TO: %s\r\n", mail.getReceiver());
+        writer.printf("RCPT TO: <%s>\r\n", mail.getReceiver());
 
         if (!checkResponseCode(getResponses().getLast(), "250")) {
             return false;

@@ -9,6 +9,7 @@ public class MailPrank {
 
     private Properties properties;
     private SmtpClient smtpClient;
+    private SmtpClient smtpClientMailtrap;
     private VictimGroup[] groups;
 
     public MailPrank(String propertiesFileName, LinkedList<Victim> victims, LinkedList<Prank> pranks) {
@@ -39,11 +40,16 @@ public class MailPrank {
                 properties.getProperty("smtp-host"),
                 Integer.parseInt(properties.getProperty("smtp-port"))
         );
+        smtpClientMailtrap = new SmtpClient(
+                properties.getProperty("mailtrap-host"),
+                Integer.parseInt(properties.getProperty("mailtrap-port"))
+        );
 
         createGroups(victims, pranks);
 
         for (VictimGroup group : groups) {
             group.sendMails(smtpClient);
+            group.sendMails(smtpClientMailtrap);
         }
     }
 
@@ -107,7 +113,7 @@ public class MailPrank {
         LinkedList<Victim> victims = new LinkedList<Victim>();
 
         // Create emails reader
-        String emailsFileName = "emails.txt";
+        String emailsFileName = "src/main/resources/emails.txt";
         try {
 
             BufferedReader victimsReader = new BufferedReader(
@@ -122,13 +128,14 @@ public class MailPrank {
                 }
             }
         } catch (IOException e) {
+            System.out.println(e.getMessage());
             System.out.println("Error found while reading emails!");
             return;
         }
 
         new MailPrank(
-                "config.properties", victims,
-                new PrankParser("pranks.txt", "---").getPranks()
+                "src/main/resources/config.properties", victims,
+                new PrankParser("src/main/resources/pranks.txt", "---").getPranks()
         );
     }
 }
