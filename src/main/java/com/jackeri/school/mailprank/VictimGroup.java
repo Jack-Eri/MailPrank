@@ -9,23 +9,33 @@ public class VictimGroup {
 
     private Victim sender;
     private LinkedList<Victim> receivers;
+    private Prank prank;
 
-    public VictimGroup(Victim sender) {
+    public VictimGroup(Prank prank) {
 
-        this.sender = sender;
+        this.sender = null;
         this.receivers = new LinkedList<Victim>();
+        this.prank = prank;
     }
 
     public void sendMails(ISmtpClient smtpClient) {
 
+        if (!isGroupReady()) {
+            return;
+        }
+
         for (Victim victim : receivers) {
             try {
-                smtpClient.sendMessage(new Mail(sender.getMail(), victim.getMail(), "Test", "Test Test"));
+                smtpClient.sendMessage(new Mail(sender.getMail(), victim.getMail(), prank.getSubject(), prank.getMessage()));
             } catch (IOException e) {
                 System.out.printf("Couldn't send mail from %s to %s!\n", sender, victim);
                 e.printStackTrace();
             }
         }
+    }
+
+    public void setSender(Victim sender) {
+        this.sender = sender;
     }
 
     public void addReceiver(Victim victim) {
@@ -35,6 +45,6 @@ public class VictimGroup {
     }
 
     public boolean isGroupReady() {
-        return receivers.size() >= 3;
+        return sender != null && receivers.size() >= 2;
     }
 }

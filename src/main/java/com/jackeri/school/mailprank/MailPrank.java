@@ -3,23 +3,36 @@ package com.jackeri.school.mailprank;
 import com.jackeri.school.mailprank.smtp.SmtpClient;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Properties;
+import java.util.*;
 
 public class MailPrank {
 
-    Properties properties;
-    SmtpClient smtpClient;
-    VictimGroup[] victimGroups;
+    private Properties properties;
+    private SmtpClient smtpClient;
+    private VictimGroup[] groups;
 
-    public MailPrank(String propertiesFileName, Collection<Victim> victims) {
+    public MailPrank(String propertiesFileName, LinkedList<Victim> victims, LinkedList<Prank> pranks) {
 
         this.properties = new Properties();
-        this.victimGroups = new VictimGroup[1];
 
         loadProperties(propertiesFileName);
+
+        try {
+            this.groups = new VictimGroup[Integer.parseInt(properties.getProperty("groups-count"))];
+        } catch (NumberFormatException e) {
+            System.out.printf("Couldn't use 'groups-count' property from %s!\n", propertiesFileName);
+            System.exit(-1);
+        }
+
+        // Check arguments and properties
+        if (pranks.size() < groups.length) {
+            System.out.printf("Not enough pranks to create %d groups", groups.length);
+            System.exit(-1);
+
+        } else if (victims.size() / groups.length < 3) {
+            System.out.printf("Not enough victims to have at least 3 per group!");
+            System.exit(-1);
+        }
 
         // Create smtp client
         smtpClient = new SmtpClient(
@@ -27,9 +40,11 @@ public class MailPrank {
                 Integer.parseInt(properties.getProperty("smtp-port"))
         );
 
-        createGroups(victims);
+        createGroups(victims, pranks);
 
-        victimGroups[0].sendMails(smtpClient);
+        for (VictimGroup group : groups) {
+            group.sendMails(smtpClient);
+        }
     }
 
     /**
@@ -50,14 +65,40 @@ public class MailPrank {
         }
     }
 
-    //
-    private void createGroups(Collection<Victim> victims) {
+    private void createGroups(LinkedList<Victim> victims, LinkedList<Prank> pranks) {
+
+        Collections.shuffle(pranks);
+        Iterator<Prank> itPranks = pranks.iterator();
+        for (int i = 0; i < groups.length; ++i) {
+            groups[i] = new VictimGroup(itPranks.next());
+        }
+
+        // Victims per group;
+        final int victimsPerGroup = victims.size() / groups.length;
 
         // Create groups
+        Collections.shuffle(victims);
         Iterator<Victim> it = victims.iterator();
-        victimGroups[0] = new VictimGroup(it.next());
-        while (it.hasNext()) {
-            victimGroups[0].addReceiver(it.next());
+
+        // Adds one sender and  'victimsPerGroup - 1' receivers to each group
+        for (VictimGroup group : groups) {
+
+            if (!it.hasNext()) {
+                break;
+            }
+            group.setSender(it.next());
+
+            for (int i = 1; i < victimsPerGroup && it.hasNext(); ++i) {
+                group.addReceiver(it.next());
+            }
+        }
+
+        // Add remaining victims as receivers.
+        for (VictimGroup group : groups) {
+            if (!it.hasNext()) {
+                break;
+            }
+            group.addReceiver(it.next());
         }
     }
 
@@ -85,6 +126,9 @@ public class MailPrank {
             return;
         }
 
-        new MailPrank("config.properties", victims);
+        new MailPrank(
+                "config.properties", victims,
+                new PrankParser("pranks.txt", "---").getPranks()
+        );
     }
 }
