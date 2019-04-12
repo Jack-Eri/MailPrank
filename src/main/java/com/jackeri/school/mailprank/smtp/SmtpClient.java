@@ -12,18 +12,23 @@ public class SmtpClient implements ISmtpClient {
     private final String CHARSET = "UTF-8";
     private final String HOST;
     private final int PORT;
+    private final String USERNAME;
+    private final String PASSWORD;
 
     private Socket socket = null;
     private PrintWriter writer = null;
     private BufferedReader reader = null;
 
-    public SmtpClient(String host, int port) {
+    public SmtpClient(String host, int port, String username, String password) {
         HOST = host;
         PORT = port;
+        USERNAME = username;
+        PASSWORD = password;
     }
 
     /**
      * Connects a socket to a smtp server.
+     *
      * @return true if the socket is ready
      * @throws IOException
      */
@@ -50,6 +55,7 @@ public class SmtpClient implements ISmtpClient {
 
     /**
      * Closes the socket and the I/O streams
+     *
      * @throws IOException if an I/O exception occured when cosing the socket and the streams
      */
     private void closeSocket() throws IOException {
@@ -68,7 +74,8 @@ public class SmtpClient implements ISmtpClient {
 
     /**
      * Checks if the code of the response corresponds to the expected code
-     * @param response String with the smtp response
+     *
+     * @param response     String with the smtp response
      * @param expectedCode String with the expected response Code
      * @return true is the codes are equals.
      */
@@ -78,6 +85,7 @@ public class SmtpClient implements ISmtpClient {
 
     /**
      * Check is a response is the last response.
+     *
      * @param response String with the smtp response
      * @return true if it's the last one
      */
@@ -87,6 +95,7 @@ public class SmtpClient implements ISmtpClient {
 
     /**
      * Gets the responses in a linked list of strings
+     *
      * @return A LinkedList with the responses
      * @throws IOException
      */
@@ -102,6 +111,7 @@ public class SmtpClient implements ISmtpClient {
 
     /**
      * Sends a mail.
+     *
      * @param mail mail to send
      * @return true is the mail has been correctly sent.
      * @throws IOException
@@ -115,90 +125,62 @@ public class SmtpClient implements ISmtpClient {
         // Ask to write mail
         writer.printf("EHLO mailprank\r\n");
 
-        if (!checkResponseCode(getResponses().getLast(), "250")) {
-            return false;
+        // Check responses and if it should authenticate
+        String authResponse = null;
+        LinkedList<String> responses = getResponses();
+        for (String response : responses) {
+            if (checkResponseCode(response, "250")) {
+
+                if (response.contains("AUTH")) {
+                    authResponse = response;
+                }
+
+            } else {
+                return false;
+            }
         }
 
-        if(HOST.equals("smtp.mailtrap.io")){
-            writer.printf("AUTH LOGIN\r\n");
-
-
-            if (!checkResponseCode(getResponses().getLast(), "334")) {
-                return false;
-            }
-
-            writer.printf("YmJhN2YzYTc5NDZmNGY=\r\n");
-
-            if (!checkResponseCode(getResponses().getLast(), "334")) {
-                return false;
-            }
-
-            writer.printf("ZjA2Yjg0ZDIwYmRmOGY=\r\n");
-
-            if (!checkResponseCode(getResponses().getLast(), "235")) {
-                return false;
-            }
-
+        if (authResponse != null && !authLogin()) {
+            return false;
         }
 
         boolean mailSent = sendMail(mail);
 
-        // quit
+        // Close connection
         writer.printf("QUIT");
+        closeSocket();
 
         return mailSent;
     }
 
     /**
-     * Sends an array of mails
-     * @param mails mails to send
+     *
+     * @return
      * @throws IOException
      */
-    public void sendMessages(Mail[] mails) throws IOException {
+    private boolean authLogin() throws IOException {
 
-        if (!openSocket()) {
-            return;
-        }
+        writer.printf("AUTH LOGIN\r\n");
 
-        // Ask to write mail
-        writer.printf("EHLO mailprank\r\n");
+        if (checkResponseCode(getResponses().getLast(), "334")) {
 
-        if (!checkResponseCode(getResponses().getLast(), "250")) {
+            writer.printf("%s\r\n", USERNAME);
 
-            return;
-        }
+            if (checkResponseCode(getResponses().getLast(), "334")) {
+                writer.printf("%s\r\n", PASSWORD);
 
-        if(HOST.equals("smtp.mailtrap.io")){
-            writer.printf("AUTH LOGIN\r\n");
-
-            if (!checkResponseCode(getResponses().getLast(), "334")) {
-                return;
+                if (checkResponseCode(getResponses().getLast(), "235")) {
+                    return true;
+                }
             }
-
-            writer.printf("YmJhN2YzYTc5NDZmNGY=\r\n");
-
-            if (!checkResponseCode(getResponses().getLast(), "334")) {
-                return;
-            }
-
-            writer.printf("ZjA2Yjg0ZDIwYmRmOGY=\r\n");
-
-            if (!checkResponseCode(getResponses().getLast(), "235")) {
-                return;
-            }
-
         }
 
-        for (Mail mail : mails) {
-            sendMail(mail);
-        }
-
-        // quit
-        writer.printf("QUIT");
+        return false;
     }
 
     /**
      * Sends a single mail.
+     *
      * @param mail mail to send
      * @return true if the mail has been sent
      * @throws IOException
