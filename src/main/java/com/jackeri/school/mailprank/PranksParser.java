@@ -1,22 +1,22 @@
 package com.jackeri.school.mailprank;
 
 import java.io.*;
-import java.util.Collection;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
-public class PrankParser {
+public class PranksParser {
 
     private final String separator;
     private BufferedReader reader;
     private LinkedList<Prank> pranks;
 
-    public PrankParser(String filename, String separator) {
+    public PranksParser(String filename, String separator) {
 
         this.separator = separator;
-        this.pranks = new LinkedList<Prank>();
+        this.pranks = new LinkedList<>();
 
         try {
-            reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename), "UTF-8"));
+            reader = new BufferedReader(new InputStreamReader(new FileInputStream(filename), StandardCharsets.UTF_8));
         } catch (IOException e) {
             System.out.println("Failed opening " + filename + "!");
             System.exit(-1);
@@ -57,12 +57,11 @@ public class PrankParser {
                     reader.readLine();
 
                 } else { // the current line is part of the message
-                    messageBuilder.append(line);
-                    messageBuilder.append("\n");
+                    messageBuilder.append(line).append("\n");
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            return null;
         }
 
         // No more pranks

@@ -1,4 +1,4 @@
-package com.jackeri.school.mailprank;
+package com.jackeri.school.mailprank.smtp;
 
 public class Mail {
 

@@ -1,6 +1,7 @@
 package com.jackeri.school.mailprank;
 
 import com.jackeri.school.mailprank.smtp.ISmtpClient;
+import com.jackeri.school.mailprank.smtp.Mail;
 
 import java.io.IOException;
 import java.util.LinkedList;

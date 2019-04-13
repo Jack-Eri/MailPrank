@@ -15,7 +15,7 @@ public class MailPrank {
     private SmtpClient smtpClient;
     private VictimGroup[] groups;
 
-    public MailPrank(String propertiesFileName, LinkedList<Victim> victims, LinkedList<Prank> pranks) {
+    public MailPrank(String propertiesFileName, String victimsFileName, String pranksFileName) {
 
         this.properties = new Properties();
 
@@ -27,6 +27,14 @@ public class MailPrank {
             LOG.severe(String.format("Couldn't use 'groups-count' property from %s!\n", propertiesFileName));
             System.exit(-1);
         }
+
+        // Parse pranks and victims
+        LinkedList<Prank> pranks = new PranksParser(
+                properties.getProperty("pranks-filename"),
+                properties.getProperty("prank-separator")
+        ).getPranks();
+
+        LinkedList<Victim> victims = new VictimsParser(properties.getProperty("victims-filename")).getVictims();
 
         // Check arguments and properties
         if (pranks.size() < groups.length) {
@@ -130,7 +138,7 @@ public class MailPrank {
         LinkedList<Victim> victims = new LinkedList<Victim>();
 
         // Create emails reader
-        String emailsFileName = "emails.txt";
+        String emailsFileName = "victims.txt";
         try {
 
             BufferedReader victimsReader = new BufferedReader(
@@ -151,8 +159,9 @@ public class MailPrank {
         }
 
         new MailPrank(
-                "config.properties", victims,
-                new PrankParser("pranks.txt", "---").getPranks()
+                "config.properties",
+                "victims.txt",
+                "pranks.txt"
         );
     }
 }

@@ -1,10 +1,6 @@
 package com.jackeri.school.mailprank.smtp;
 
 
-import com.jackeri.school.mailprank.Mail;
-import com.jackeri.school.mailprank.MailPrank;
-import com.oracle.tools.packager.Log;
-
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -256,7 +252,7 @@ public class SmtpClient implements ISmtpClient {
 
             mailCount++;
 
-            MailPrank.LOG.info(String.format(
+            LOG.info(String.format(
                     "Mail: sent from %s to %s", mail.getSender(), receiver
             ));
 
