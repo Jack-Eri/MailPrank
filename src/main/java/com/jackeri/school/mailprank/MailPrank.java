@@ -43,7 +43,8 @@ public class MailPrank {
                 properties.getProperty("smtp-host"),
                 Integer.parseInt(properties.getProperty("smtp-port")),
                 properties.getProperty("smtp-username"),
-                properties.getProperty("smtp-password")
+                properties.getProperty("smtp-password"),
+                Integer.parseInt(properties.getProperty("smtp-cooldown"))
         );
 
         createGroups(victims, pranks);

@@ -2,28 +2,35 @@ package com.jackeri.school.mailprank.smtp;
 
 
 import com.jackeri.school.mailprank.Mail;
+import com.jackeri.school.mailprank.MailPrank;
+import com.oracle.tools.packager.Log;
 
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
+import java.util.logging.Logger;
 
 public class SmtpClient implements ISmtpClient {
 
-    private final String CHARSET = "UTF-8";
+    private static Logger LOG = Logger.getLogger(SmtpClient.class.getSimpleName());
+
     private final String HOST;
     private final int PORT;
     private final String USERNAME;
     private final String PASSWORD;
+    private final int COOLDOWN;
 
     private Socket socket = null;
     private PrintWriter writer = null;
     private BufferedReader reader = null;
 
-    public SmtpClient(String host, int port, String username, String password) {
+    public SmtpClient(String host, int port, String username, String password, int cooldown) {
         HOST = host;
         PORT = port;
         USERNAME = username;
         PASSWORD = password;
+        COOLDOWN = cooldown;
     }
 
     /**
@@ -40,17 +47,19 @@ public class SmtpClient implements ISmtpClient {
 
         socket = new Socket(HOST, PORT);
 
-        writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
+        writer = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), StandardCharsets.UTF_8), true);
 
-        reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
+        reader = new BufferedReader(new InputStreamReader(socket.getInputStream(), StandardCharsets.UTF_8));
 
         // clear socket and streams
         if (checkResponseCode(getResponses().getLast(), "220")) {
             return true;
         }
 
+        LOG.severe("Failed opening the socket!");
+
         closeSocket();
-        return true;
+        return false;
     }
 
     /**
@@ -110,16 +119,15 @@ public class SmtpClient implements ISmtpClient {
     }
 
     /**
-     * Sends a mail.
+     * Sends a mail to each receivers.
      *
      * @param mail mail to send
-     * @return true is the mail has been correctly sent.
-     * @throws IOException
+     * @throws IOException if there is a socket or a stream error
      */
-    public boolean sendMessage(Mail mail) throws IOException {
+    public void sendMessage(Mail mail) throws IOException {
 
         if (!openSocket()) {
-            return false;
+            return;
         }
 
         // Ask to write mail
@@ -136,27 +144,34 @@ public class SmtpClient implements ISmtpClient {
                 }
 
             } else {
-                return false;
+                LOG.severe(response);
+                closeSocket();
+                return;
             }
         }
 
+        LOG.info(String.format("Sending mail: \"%s\"", mail.getSubject()));
+
+        // Try to authenticate if needed
         if (authResponse != null && !authLogin()) {
-            return false;
+            closeSocket();
+            return;
         }
 
-        boolean mailSent = sendMail(mail);
+        int count = sendMail(mail);
+        LOG.info(String.format("%d mails sent out of %d receivers", count, mail.getReceivers().length));
 
         // Close connection
         writer.printf("QUIT");
         closeSocket();
-
-        return mailSent;
     }
 
     /**
+     * Try to authenticate to the smtp connectio using AUTH LOGIN.
+     * The username and the password must be base64 encoded.
      *
-     * @return
-     * @throws IOException
+     * @return true if the authentication succeeded
+     * @throws IOException if there is a socket or a stream error
      */
     private boolean authLogin() throws IOException {
 
@@ -170,62 +185,91 @@ public class SmtpClient implements ISmtpClient {
                 writer.printf("%s\r\n", PASSWORD);
 
                 if (checkResponseCode(getResponses().getLast(), "235")) {
+                    LOG.info("Authentication succeeded!");
                     return true;
                 }
             }
         }
 
+        LOG.info("Authentication failed!");
         return false;
     }
 
     /**
-     * Sends a single mail.
+     * Sends the given mail to all receivers
      *
-     * @param mail mail to send
-     * @return true if the mail has been sent
-     * @throws IOException
+     * @return returns the numbers receivers that were sent a message
+     * @throws IOException if there is a socket or a stream error
      */
-    private boolean sendMail(Mail mail) throws IOException {
+    private int sendMail(Mail mail) throws IOException {
 
-        // Set sender
-        writer.printf("MAIL FROM: <%s>\r\n", mail.getSender());
+        String response;
+        int mailCount = 0;
+        for (String receiver : mail.getReceivers()) {
 
-        if (!checkResponseCode(getResponses().getLast(), "250")) {
-            return false;
+            // Set sender
+            writer.printf("MAIL FROM: <%s>\r\n", mail.getSender());
+
+            response = getResponses().getLast();
+            if (!checkResponseCode(response, "250")) {
+                LOG.severe(response);
+                break;
+            }
+
+            // Set receiver
+            writer.printf("RCPT TO: <%s>\r\n", receiver);
+
+            response = getResponses().getLast();
+            if (!checkResponseCode(response, "250")) {
+                LOG.severe(response);
+                break;
+            }
+
+            // send data
+            writer.printf("DATA\r\n");
+
+            response = getResponses().getLast();
+            if (!checkResponseCode(response, "354")) {
+                LOG.severe(response);
+                break;
+            }
+
+            // header
+            writer.printf("From: %s\r\n", mail.getSender());
+            writer.printf("To: %s\r\n", receiver);
+            writer.printf("Subject: %s\r\n", mail.getSubject());
+
+            // separator
+            writer.printf("\r\n");
+
+            // body
+            writer.printf("%s\r\n", mail.getBody());
+
+            // end
+            writer.printf(".\r\n");
+
+            response = getResponses().getLast();
+            if (!checkResponseCode(response, "250")) {
+                LOG.severe(response);
+                break;
+            }
+
+            mailCount++;
+
+            MailPrank.LOG.info(String.format(
+                    "Mail: sent from %s to %s", mail.getSender(), receiver
+            ));
+
+            // Wait before sending the next mail.
+            if (COOLDOWN >= 0) {
+                try {
+                    Thread.sleep(COOLDOWN);
+                } catch (InterruptedException e) {
+                    LOG.severe(String.format("Failed wait for %d ms.", COOLDOWN));
+                }
+            }
         }
 
-        // Set receiver
-        writer.printf("RCPT TO: <%s>\r\n", mail.getReceiver());
-
-        if (!checkResponseCode(getResponses().getLast(), "250")) {
-            return false;
-        }
-
-        // send data
-        writer.printf("DATA\r\n");
-
-        if (!checkResponseCode(getResponses().getLast(), "354")) {
-            return false;
-        }
-
-        // header
-        writer.printf("From: %s\r\n", mail.getSender());
-        writer.printf("To: %s\r\n", mail.getReceiver());
-        writer.printf("Subject: %s\r\n", mail.getSubject());
-
-        // separator
-        writer.printf("\r\n");
-
-        // body
-        writer.printf("%s\r\n", mail.getBody());
-
-        // end
-        writer.printf(".\r\n");
-
-        if (!checkResponseCode(getResponses().getLast(), "250")) {
-            return false;
-        }
-
-        return true;
+        return mailCount;
     }
 }

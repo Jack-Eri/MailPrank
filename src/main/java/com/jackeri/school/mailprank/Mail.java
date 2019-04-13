@@ -3,13 +3,13 @@ package com.jackeri.school.mailprank;
 public class Mail {
 
     private String sender;
-    private String receiver;
+    private String[] receivers;
     private String subject;
     private String body;
 
-    public Mail(String sender, String receiver, String subject, String body) {
+    public Mail(String sender, String[] receivers, String subject, String body) {
         this.sender = sender;
-        this.receiver = receiver;
+        this.receivers = receivers;
         this.subject = subject;
         this.body = body;
     }
@@ -18,8 +18,8 @@ public class Mail {
         return sender;
     }
 
-    public String getReceiver() {
-        return receiver;
+    public String[] getReceivers() {
+        return receivers;
     }
 
     public String getSubject() {

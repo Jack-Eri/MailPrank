@@ -16,7 +16,7 @@ public class VictimGroup {
     public VictimGroup(Prank prank) {
 
         this.sender = null;
-        this.receivers = new LinkedList<Victim>();
+        this.receivers = new LinkedList<>();
         this.prank = prank;
     }
 
@@ -26,13 +26,18 @@ public class VictimGroup {
             return;
         }
 
+        int index = 0;
+        String[] mailAdresses = new String[receivers.size()];
         for (Victim victim : receivers) {
-            try {
-                smtpClient.sendMessage(new Mail(sender.getMail(), victim.getMail(), prank.getSubject(), prank.getMessage()));
-            } catch (IOException e) {
-                System.out.printf("Couldn't send mail from %s to %s!\n", sender, victim);
-                e.printStackTrace();
-            }
+            mailAdresses[index] = victim.getMail();
+            index++;
+        }
+
+        try {
+            smtpClient.sendMessage(new Mail(sender.getMail(), mailAdresses, prank.getSubject(), prank.getMessage()));
+        } catch (IOException e) {
+            MailPrank.LOG.severe("Couldn't send mail");
+            e.printStackTrace();
         }
     }
 
