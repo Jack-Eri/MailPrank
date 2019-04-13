@@ -27,7 +27,8 @@ The mission was to develop a client application that automatically plays pranks 
 
 In order to start our project, our main source of inspiratin were four WebCast given by our teacher, Olivier Liechti. (Youtube channel https://www.youtube.com/user/oliechti/playlists ).
 
-# ------STILL NEED TO ADD---------
+
+
 ## Installation
 ### Setting up a mock SMTP server (with Docker)
 To run a smtp server, you can use the dockerfile provided to create an image that contains a [MockMock](https://github.com/tweakers/MockMock) server.
@@ -50,18 +51,37 @@ To run a smtp server, you can use the dockerfile provided to create an image tha
    docker run -d -p 8282:8282 -p 2525:2525 mockmock
    ```
 
-   - -d: makes the container run in aground.
+   - -d: makes the container run in background.
    - -p exposes a port used by MockMock. MockMock uses the port 8282 for the web interface and 2525 for the smtp server.
    - Mockmock is the name of the image to run.
 
 5. Now You can go to http://localhost:8282 to see the web interface and connect to the smtp server with localhost and 2525 (for exmple: `telnet localhost 2525`).
 
-### *Clear and simple instructions for configuring your tool and running a prank campaign
+### Clear and simple instructions for configuring your tool and running a prank:
 
-### * A description of your implementation:
+In order to configure the prank we need to set the port, the host and a username/password if needed. All these elements can be defined at the config.properties file.  Once we set the connection, we can choose the amount of groups that will be created (need to consider the fact that if there aren't enough pranks or not enough victims the program will fail). 
 
-document the key aspects of your code. 
-It is probably a good idea to start with a class diagram. Decide which classes you want to show (focus on the important ones) and describe their responsibilities in text. It is also certainly a good idea to include examples of dialogues between your client and an SMTP server (maybe you also want to include some screenshots here).
+#### Example using Mailtrap:
+
+![Screenshot 2019-04-13 at 23.24.41](/Users/andresmoreno/Desktop/Screenshot 2019-04-13 at 23.24.41.png)
+
+
+
+### Implementation:
+
+The program can be divided in 4 blocks:
+
+1. The Smtp
+2. The victims
+3. The pranks
+4. The main (MailPrank)
+
+
+
+The Smtp block takes care of the creation of a Client (all the interaction with the server), and the creation of an mail. The victims block reads the mails from a resource file, creates the victims and generates the groups. The pranks block reads the pranks from a resource file and generates the pranks. Finally the main, will execute the program.
+
+
+
 
 
 
