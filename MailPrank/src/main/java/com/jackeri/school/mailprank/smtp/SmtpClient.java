@@ -1,12 +1,16 @@
 package com.jackeri.school.mailprank.smtp;
 
-
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.logging.Logger;
 
+/**
+ * Represents a SMTP client used to send mails.
+ *
+ * @author Nohan Budry, Andrés Moreno
+ */
 public class SmtpClient implements ISmtpClient {
 
     private static Logger LOG = Logger.getLogger(SmtpClient.class.getSimpleName());
@@ -21,6 +25,14 @@ public class SmtpClient implements ISmtpClient {
     private PrintWriter writer = null;
     private BufferedReader reader = null;
 
+    /**
+     * Creates a new SMTP client.
+     * @param host the host
+     * @param port the port
+     * @param username the username
+     * @param password the password
+     * @param cooldown the cooldonwn between each mails
+     */
     public SmtpClient(String host, int port, String username, String password, int cooldown) {
         HOST = host;
         PORT = port;
@@ -61,7 +73,7 @@ public class SmtpClient implements ISmtpClient {
     /**
      * Closes the socket and the I/O streams
      *
-     * @throws IOException if an I/O exception occured when cosing the socket and the streams
+     * @throws IOException if an I/O exception occurred when closing the socket and the streams
      */
     private void closeSocket() throws IOException {
 
@@ -102,7 +114,7 @@ public class SmtpClient implements ISmtpClient {
      * Gets the responses in a linked list of strings
      *
      * @return A LinkedList with the responses
-     * @throws IOException
+     * @throws IOException if there is a socket or a stream error
      */
     private LinkedList<String> getResponses() throws IOException {
         LinkedList<String> responses = new LinkedList<String>();

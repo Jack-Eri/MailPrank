@@ -7,11 +7,21 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 
+/**
+ * Reads the file containing the victims e-mail addresses.
+ * The file should contain one address per line.
+ *
+ * @author Nohan Budry, Adnrés Moreno
+ */
 public class VictimsParser {
 
     private BufferedReader reader;
     private LinkedList<Victim> victims;
 
+    /**
+     * Parses the file to a linked list of victims
+     * @param filename name of the file containing the victims
+     */
     public VictimsParser(String filename) {
 
         victims = new LinkedList<>();
@@ -51,6 +61,10 @@ public class VictimsParser {
         return new Victim(mail);
     }
 
+    /**
+     * Returns the list of victims.
+     * @return a linked list of victims
+     */
     public LinkedList<Victim> getVictims() {
         return victims;
     }

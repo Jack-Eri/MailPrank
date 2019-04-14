@@ -7,15 +7,25 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Represents the mail prank application.
+ * Read properties, create groups and launches the SMTP connection.
+ *
+ * @author Nohan Budry, Andrés Moreno
+ */
 public class MailPrank {
 
     public static Logger LOG = Logger.getLogger(MailPrank.class.getSimpleName());
-;
+
     private Properties properties;
     private SmtpClient smtpClient;
     private VictimGroup[] groups;
 
-    public MailPrank(String propertiesFileName, String victimsFileName, String pranksFileName) {
+    /**
+     * Starts the mail prank.
+     * @param propertiesFileName file containing the properties needed by the program.
+     */
+    public MailPrank(String propertiesFileName) {
 
         this.properties = new Properties();
 
@@ -36,7 +46,7 @@ public class MailPrank {
 
         LinkedList<Victim> victims = new VictimsParser(properties.getProperty("victims-filename")).getVictims();
 
-        // Check arguments and properties
+        // Check properties
         if (pranks.size() < groups.length) {
             LOG.severe(String.format("Not enough pranks to create %d groups", groups.length));
             System.exit(-1);
@@ -123,6 +133,11 @@ public class MailPrank {
         }
     }
 
+    /**
+     * Application entry point
+     *
+     * @param args this apps doesn't use any arguments
+     */
     public static void main(String[] args) {
 
         /*
@@ -133,35 +148,7 @@ public class MailPrank {
          * We agree with him. (copied from Lab Java IO)
          */
         System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s%6$s%n");
-        LOG.setLevel(Level.INFO);
 
-        LinkedList<Victim> victims = new LinkedList<Victim>();
-
-        // Create emails reader
-        String emailsFileName = "victims.txt";
-        try {
-
-            BufferedReader victimsReader = new BufferedReader(
-                    new InputStreamReader(new FileInputStream(emailsFileName), "UTF-8")
-            );
-
-            // Read emails and create victims
-            String victimMail;
-            while (((victimMail = victimsReader.readLine()) != null)) {
-                if (victimMail.length() > 0) {
-                    victims.add(new Victim(victimMail));
-                }
-            }
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.out.println("Error found while reading emails!");
-            return;
-        }
-
-        new MailPrank(
-                "config.properties",
-                "victims.txt",
-                "pranks.txt"
-        );
+        new MailPrank("config.properties");
     }
 }
