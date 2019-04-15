@@ -27,8 +27,6 @@ The mission was to develop a client application that automatically plays pranks 
 
 In order to start our project, our main source of inspiratin were four WebCast given by our teacher, Olivier Liechti. (Youtube channel https://www.youtube.com/user/oliechti/playlists ).
 
-
-
 ## Installation
 ### Downloads 
 
@@ -92,9 +90,9 @@ The program can be divided in 4 blocks:
 3. The pranks
 4. The main (MailPrank)
 
-
-
 The Smtp block takes care of the creation of a Client (all the interaction with the server), and the creation of an mail. The victims block reads the mails from a resource file, creates the victims and generates the groups. The pranks block reads the pranks from a resource file and generates the pranks. Finally the main, will execute the program.
+
+![diagram_intellij](figures/diagram_intellij.png)
 
 
 
