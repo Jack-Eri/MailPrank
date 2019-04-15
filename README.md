@@ -77,10 +77,6 @@ To run the application you can simply double click "mail prank-1.0.jar", but you
 
 If you want some feedback, open a terminal and go in the same folder as the executable "mail prank-1.0.jar" (this is important for the jar to find the config files). Then run `java -jar mailprank-1.0.jar`.
 
-#### Example using Mailtrap:
-
-![telnetMailtrapExample](figures/telnetMailtrapExample.png)
-
 ### Implementation:
 
 The program can be divided in 4 blocks:
