@@ -166,8 +166,9 @@ public class SmtpClient implements ISmtpClient {
             return;
         }
 
-        int count = sendMail(mail);
-        LOG.info(String.format("%d mails sent out of %d receivers", count, mail.getReceivers().length));
+        if (sendMail(mail)) {
+            LOG.info(String.format("Mail sent"));
+        }
 
         // Close connection
         writer.printf("QUIT");
@@ -209,75 +210,80 @@ public class SmtpClient implements ISmtpClient {
      * @return returns the numbers receivers that were sent a message
      * @throws IOException if there is a socket or a stream error
      */
-    private int sendMail(Mail mail) throws IOException {
+    private boolean sendMail(Mail mail) throws IOException {
 
         String response;
-        int mailCount = 0;
+
+        // Set sender
+        writer.printf("MAIL FROM: <%s>\r\n", mail.getSender());
+
+        response = getResponses().getLast();
+        if (!checkResponseCode(response, "250")) {
+            LOG.severe(response);
+            return false;
+        }
+
+        // Set receivers
         for (String receiver : mail.getReceivers()) {
-
-            // Set sender
-            writer.printf("MAIL FROM: <%s>\r\n", mail.getSender());
-
-            response = getResponses().getLast();
-            if (!checkResponseCode(response, "250")) {
-                LOG.severe(response);
-                break;
-            }
-
-            // Set receiver
             writer.printf("RCPT TO: <%s>\r\n", receiver);
 
             response = getResponses().getLast();
             if (!checkResponseCode(response, "250")) {
                 LOG.severe(response);
-                break;
-            }
-
-            // send data
-            writer.printf("DATA\r\n");
-
-            response = getResponses().getLast();
-            if (!checkResponseCode(response, "354")) {
-                LOG.severe(response);
-                break;
-            }
-
-            // header
-            writer.printf("From: %s\r\n", mail.getSender());
-            writer.printf("To: %s\r\n", receiver);
-            writer.printf("Subject: %s\r\n", mail.getSubject());
-
-            // separator
-            writer.printf("\r\n");
-
-            // body
-            writer.printf("%s\r\n", mail.getBody());
-
-            // end
-            writer.printf(".\r\n");
-
-            response = getResponses().getLast();
-            if (!checkResponseCode(response, "250")) {
-                LOG.severe(response);
-                break;
-            }
-
-            mailCount++;
-
-            LOG.info(String.format(
-                    "Mail: sent from %s to %s", mail.getSender(), receiver
-            ));
-
-            // Wait before sending the next mail.
-            if (COOLDOWN >= 0) {
-                try {
-                    Thread.sleep(COOLDOWN);
-                } catch (InterruptedException e) {
-                    LOG.severe(String.format("Failed wait for %d ms.", COOLDOWN));
-                }
+                return false;
             }
         }
 
-        return mailCount;
+        // send data
+        writer.printf("DATA\r\n");
+
+        response = getResponses().getLast();
+        if (!checkResponseCode(response, "354")) {
+            LOG.severe(response);
+            return false;
+        }
+
+        StringBuilder receivers = new StringBuilder();
+        for (int i = 0; i < mail.getReceivers().length; ++i) {
+            if (i > 0) {
+                receivers.append(",");
+            }
+            receivers.append(mail.getReceivers()[i]);
+        }
+
+        // header
+        writer.printf("From: %s\r\n", mail.getSender());
+        writer.printf("To: %s\r\n", receivers);
+        writer.printf("Subject: %s\r\n", mail.getSubject());
+
+        // separator
+        writer.printf("\r\n");
+
+        // body
+        writer.printf("%s\r\n", mail.getBody());
+
+        // end
+        writer.printf(".\r\n");
+
+        response = getResponses().getLast();
+        if (!checkResponseCode(response, "250")) {
+            LOG.severe(response);
+            return false;
+        }
+
+        LOG.info(String.format(
+                "Mail: sent from %s", mail.getSender()
+        ));
+
+        // Wait before sending the next mail.
+        if (COOLDOWN >= 0) {
+            try {
+                Thread.sleep(COOLDOWN);
+            } catch (InterruptedException e) {
+                LOG.severe(String.format("Failed wait for %d ms.", COOLDOWN));
+            }
+        }
+
+        return true;
     }
 }
