@@ -30,7 +30,15 @@ In order to start our project, our main source of inspiratin were four WebCast g
 
 
 ## Installation
-### Setting up a mock SMTP server (with Docker)
+### Downloads 
+
+To configure and run the application there are two possibilities:
+
+- Clone the repo. Run `mvn package` inside the folder "MailPrank/". This will create a zip at "MailPrank/target/mailprank-1.0.zip". This zip contains the executable jar with the config files. In the folder "MockMockDocker/", you can find what's needed to create the mock SMTP server with docker.
+- If you don't want to clone all the repo, you can download "mailprank-1.0.zip" and "MockMockDocker.zip" [here](https://github.com/Jack-Eri/MailPrank/releases/tag/1.0).
+
+### Setting up a mock SMTP server with Docker
+
 To run a smtp server, you can use the dockerfile provided to create an image that contains a [MockMock](https://github.com/tweakers/MockMock) server.
 
 1. Go to the folder MockMockDocker. There is a Dockerfile and the MockMock server executable.
@@ -57,15 +65,23 @@ To run a smtp server, you can use the dockerfile provided to create an image tha
 
 5. Now You can go to http://localhost:8282 to see the web interface and connect to the smtp server with localhost and 2525 (for exmple: `telnet localhost 2525`).
 
-### Clear and simple instructions for configuring your tool and running a prank:
+### Configuration
 
-In order to configure the prank we need to set the port, the host and a username/password if needed. All these elements can be defined at the config.properties file.  Once we set the connection, we can choose the amount of groups that will be created (need to consider the fact that if there aren't enough pranks or not enough victims the program will fail). 
+There are some configuration do do before runne the application. Decompress the zip and go inside the folder "mailprank-1.0/". Here are all the config files and the executable jar.
+
+- Edit "emails.txt" to write the list of victims. You must write one e-mail per line (as in the default content).
+- Edit "pranks.txt" with all the different pranks you want to send. The first line of each prank is the subject. And the body starts a the third line. The second line is ignored. You must separate each prank with a specific separator (in one line). By default, the separator is "---" but you can modify it in the "config.properties".
+- Then in the "config.properties" you must set the host and the port of the SMTP server. You may need to add the username and password (encoded in base64) depending of the server used. For the other properties, follow the documentation written in the file. By default, the config file is ready to use with the MockMock server created above.
+
+### Running
+
+To run the application you can simply double click "mail prank-1.0.jar", but you won't have any information of whether it worked or not.
+
+If you want some feedback, open a terminal and go in the same folder as the executable "mail prank-1.0.jar" (this is important for the jar to find the config files). Then run `java -jar mailprank-1.0.jar`.
 
 #### Example using Mailtrap:
 
-![Screenshot 2019-04-13 at 23.24.41](/Users/andresmoreno/Desktop/Screenshot 2019-04-13 at 23.24.41.png)
-
-
+![telnetMailtrapExample](figures/telnetMailtrapExample.png)
 
 ### Implementation:
 
